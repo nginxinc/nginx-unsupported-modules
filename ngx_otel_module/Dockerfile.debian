@@ -1,0 +1,48 @@
+ARG ARCH=amd64
+FROM $ARCH/debian:bullseye-slim
+
+ARG NGX_VERSION
+ENV DEBIAN_FRONTEND=noninteractive
+ENV NGINX_VERSION=$NGX_VERSION
+ENV CONAN_VERSION=1.42.1
+ENV CONAN_SHA_CHECKSUM=11c9c32c099164eeb3e56656692983bc6a2df80a6767e4c02e78cc0333e4bf2a
+ENV OTEL_CPP_CONTRIB_VERSION_TAG=main
+
+RUN set -eux; \
+    apt-get update -qqq; \
+    apt-get install --no-install-recommends -qqq --yes \
+      build-essential \
+      ca-certificates \
+      cmake \
+      curl \
+      git \
+      python3-pip
+
+RUN set -eux; \
+    pip install conan; \
+    conan profile new default --detect; \
+    conan profile update settings.compiler.libcxx=libstdc++11 default
+
+RUN set -eux; \
+    mkdir /build; \
+    git clone --depth 1 --branch ${OTEL_CPP_CONTRIB_VERSION_TAG} https://github.com/open-telemetry/opentelemetry-cpp-contrib.git /build/opentelemetry-cpp-contrib; \
+    mkdir /build/opentelemetry-cpp-contrib/instrumentation/nginx/build
+
+WORKDIR /build/opentelemetry-cpp-contrib/instrumentation/nginx
+COPY ngx_otel_module/use_conan.patch .
+COPY ngx_otel_module/conanfile.txt .
+RUN patch < use_conan.patch
+
+WORKDIR /build/opentelemetry-cpp-contrib/instrumentation/nginx/build
+RUN conan install ..
+
+COPY downloads/nginx-$NGINX_VERSION.tar.gz /tmp/nginx.tar.gz
+
+RUN set -eux; \
+    cmake ..; \
+    cmake --build . --config Release; \
+    mkdir /nginx-modules; \
+    cmake --install . --prefix /nginx-modules
+
+FROM scratch
+COPY --from=0 /nginx-modules/otel_ngx_module.so /usr/lib/nginx/modules/otel_ngx_module.so

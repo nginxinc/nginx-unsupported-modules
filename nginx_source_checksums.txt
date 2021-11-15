@@ -1,0 +1,4 @@
+4c373e7ab5bf91d34a4f11a0c9496561061ba5eee6020db272a17a7228d35f99  downloads/nginx-1.18.0.tar.gz
+e8d0290ff561986ad7cd6c33307e12e11b137186c4403a6a5ccdb4914c082d88  downloads/nginx-1.19.10.tar.gz
+e462e11533d5c30baa05df7652160ff5979591d291736cfa5edb9fd2edb48c49  downloads/nginx-1.20.1.tar.gz
+d1f72f474e71bcaaf465dcc7e6f7b6a4705e4b1ed95c581af31df697551f3bfe  downloads/nginx-1.21.4.tar.gz

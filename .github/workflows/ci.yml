@@ -1,0 +1,42 @@
+name: "Continuous Integration"
+on:
+  push:
+    branches:
+      - master
+      - release/*
+  create:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  validate-commits:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v1
+      - name: Commitsar check
+        uses: docker://aevea/commitsar
+  ci-pipeline:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cache downloads
+        uses: actions/cache@v2
+        with:
+          path: downloads
+      - name: Build Container Images
+        shell: bash
+        run: build.sh
+      - name: Push to Container Registry
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          .github/workflows/is_release_tag.sh && \
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin && \
+            push.sh "ghcr.io/$(echo '${{ env.GITHUB_REPOSITORY }}' | cut -d'/' -f1)/"
