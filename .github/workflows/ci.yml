@@ -32,7 +32,7 @@ jobs:
           path: downloads
       - name: Build Container Images
         shell: bash
-        run: build.sh
+        run: ./build.sh
       - name: Push to Container Registry
         shell: bash
         env:
@@ -40,4 +40,4 @@ jobs:
         run: |
           .github/workflows/is_release_tag.sh && \
             echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin && \
-            push.sh "ghcr.io/$(echo '${{ env.GITHUB_REPOSITORY }}' | cut -d'/' -f1)/"
+            ./push.sh "ghcr.io/$(echo '${{ env.GITHUB_REPOSITORY }}' | cut -d'/' -f1)/"
