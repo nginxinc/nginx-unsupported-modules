@@ -28,6 +28,7 @@ jobs:
       - name: Cache downloads
         uses: actions/cache@v2
         with:
+          key: downloads-${{ hashFiles('nginx_build_versions.txt') }}
           path: downloads
       - name: Build Container Images
         shell: bash
