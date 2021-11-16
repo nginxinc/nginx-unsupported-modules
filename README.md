@@ -11,14 +11,22 @@ and modules.
 
 | NGINX Version | OS    | System Library | Module                         |
 |---------------|-------|----------------|--------------------------------|
-| 1.18.0        | linux | libc           | open telemetry (latest commit) |
-| 1.19.10       | linux | libc           | open telemetry (latest commit) |
-| 1.20.1        | linux | libc           | open telemetry (latest commit) |
-| 1.21.4        | linux | libc           | open telemetry (latest commit) |
 | 1.18.0        | linux | libc           | brotli filter (v1.0.0 rc)      |
+| 1.18.0        | linux | musl           | brotli filter (v1.0.0 rc)      |
 | 1.19.10       | linux | libc           | brotli filter (v1.0.0 rc)      |
+| 1.19.10       | linux | musl           | brotli filter (v1.0.0 rc)      |
 | 1.20.1        | linux | libc           | brotli filter (v1.0.0 rc)      |
+| 1.20.1        | linux | musl           | brotli filter (v1.0.0 rc)      |
 | 1.21.4        | linux | libc           | brotli filter (v1.0.0 rc)      |
+| 1.21.4        | linux | musl           | brotli filter (v1.0.0 rc)      |
+| 1.18.0        | linux | libc           | open telemetry (latest commit) |
+| 1.18.0        | linux | musl           | open telemetry (latest commit) |
+| 1.19.10       | linux | libc           | open telemetry (latest commit) |
+| 1.19.10       | linux | musl           | open telemetry (latest commit) |
+| 1.20.1        | linux | libc           | open telemetry (latest commit) |
+| 1.20.1        | linux | musl           | open telemetry (latest commit) |
+| 1.21.4        | linux | libc           | open telemetry (latest commit) |
+| 1.21.4        | linux | musl           | open telemetry (latest commit) |
 
 # Usage
 
