@@ -1,0 +1,34 @@
+ARG ARCH=amd64
+FROM $ARCH/alpine:3.14
+
+ARG NGX_VERSION
+ENV NGINX_VERSION=$NGX_VERSION
+ENV OTEL_CPP_CONTRIB_VERSION_TAG=main
+
+RUN apk add py3-pip git curl make build-base cmake patch linux-headers
+
+RUN set -eux; \
+    pip install conan; \
+    conan profile new default --detect; \
+    conan profile update settings.compiler.libcxx=libstdc++11 default
+
+RUN set -eux; \
+    mkdir /build; \
+    git clone --depth 1 --branch ${OTEL_CPP_CONTRIB_VERSION_TAG} https://github.com/open-telemetry/opentelemetry-cpp-contrib.git /build/opentelemetry-cpp-contrib; \
+    mkdir /build/opentelemetry-cpp-contrib/instrumentation/nginx/build
+
+WORKDIR /build/opentelemetry-cpp-contrib/instrumentation/nginx
+COPY ngx_otel_module/use_conan.patch .
+COPY ngx_otel_module/conanfile.txt .
+RUN patch < use_conan.patch
+
+WORKDIR /build/opentelemetry-cpp-contrib/instrumentation/nginx/build
+RUN conan install ..
+
+COPY downloads/nginx-$NGINX_VERSION.tar.gz /tmp/nginx.tar.gz
+
+RUN set -eux; \
+    cmake ..; \
+    cmake --build . --config Release; \
+    mkdir /nginx-modules; \
+    cmake --install . --prefix /nginx-modules
