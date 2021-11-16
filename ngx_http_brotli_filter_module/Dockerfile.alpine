@@ -1,0 +1,47 @@
+ARG ARCH=amd64
+FROM $ARCH/alpine:3.14
+
+ARG NGX_VERSION
+ENV NGINX_VERSION=$NGX_VERSION
+ENV BROTLI_VERSION="v1.0.0rc"
+ENV BROTLI_CHECKSUM=0019dfc4b32d63c1392aa264aed2253c1e0c2fb09216f8e2cc269bbfb8bb49b5
+
+RUN apk add git curl make build-base brotli-libs brotli-dev ca-certificates linux-headers
+
+RUN set -eux; \
+    mkdir /tmp/brotli; \
+    curl --retry 6 --fail --show-error --silent --location --output /tmp/brotli.tar.gz "https://github.com/google/ngx_brotli/archive/${BROTLI_VERSION}.tar.gz"; \
+    tar -C "/tmp/brotli" --strip-components 1 -xzf /tmp/brotli.tar.gz; \
+    echo "${BROTLI_CHECKSUM}  /tmp/brotli.tar.gz" sha256sum --check
+
+COPY downloads/nginx-${NGINX_VERSION}.tar.gz /tmp/nginx.tar.gz
+
+RUN set -eux; \
+    mkdir /tmp/nginx; \
+    tar -C /tmp/nginx --strip-components 1 -xzf /tmp/nginx.tar.gz
+
+WORKDIR /tmp/nginx
+
+RUN set -eux; \
+    ./configure --add-dynamic-module=/tmp/brotli \
+                --without-http_gzip_module \
+                --without-http_rewrite_module \
+                --prefix=/etc/nginx \
+                --sbin-path=/usr/sbin/nginx \
+                --modules-path=/usr/lib/nginx/modules \
+                --conf-path=/etc/nginx/nginx.conf \
+                --error-log-path=/var/log/nginx/error.log \
+                --http-log-path=/var/log/nginx/access.log \
+                --pid-path=/var/run/nginx.pid \
+                --lock-path=/var/run/nginx.lock \
+                --http-client-body-temp-path=/var/cache/nginx/client_temp \
+                --http-proxy-temp-path=/var/cache/nginx/proxy_temp \
+                --http-fastcgi-temp-path=/var/cache/nginx/fastcgi_temp \
+                --http-uwsgi-temp-path=/var/cache/nginx/uwsgi_temp \
+                --http-scgi-temp-path=/var/cache/nginx/scgi_temp \
+                --user=nginx --group=nginx --with-compat --with-file-aio \
+                --with-threads \
+                --with-compat \
+                --with-cc-opt='-Os -fomit-frame-pointer -g' \
+                --with-ld-opt='-Wl,--as-needed,-O1,--sort-common'; \
+    make -j2 modules
