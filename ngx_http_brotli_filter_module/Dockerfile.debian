@@ -16,7 +16,7 @@ RUN set -eux; \
     mkdir /tmp/brotli; \
     curl --retry 6 --fail --show-error --silent --location --output /tmp/brotli.tar.gz "https://github.com/google/ngx_brotli/archive/${BROTLI_VERSION}.tar.gz"; \
     tar -C "/tmp/brotli" --strip-components 1 -xzf /tmp/brotli.tar.gz; \
-    echo "0019dfc4b32d63c1392aa264aed2253c1e0c2fb09216f8e2cc269bbfb8bb49b5  /tmp/brotli.tar.gz" sha256sum --check
+    echo "${BROTLI_CHECKSUM}  /tmp/brotli.tar.gz" sha256sum --check
 
 COPY downloads/nginx-${NGINX_VERSION}.tar.gz /tmp/nginx.tar.gz
 
