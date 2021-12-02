@@ -1,5 +1,7 @@
 name: "Continuous Integration"
 on:
+  schedule:
+    - cron: '0 2 * * *' # 2am UTC
   push:
     branches:
       - master
