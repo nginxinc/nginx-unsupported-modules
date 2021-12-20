@@ -9,13 +9,9 @@ if ! command -v docker > /dev/null; then
   exit 1
 fi
 
-script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
-nginx_versions_file="${script_dir}/nginx_build_versions.txt"
+version="$1"
 
-if [ ! -f "${nginx_versions_file}" ]; then
-  echo >&2 "Unable to find NGINX versions file at path: ${nginx_versions_file}"
-  exit 1
-fi
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 arch=""
 case $(uname -m) in
@@ -30,7 +26,6 @@ arm) dpkg --print-architecture | grep -q "arm64" && arch="arm64" || arch="arm" ;
   ;;
 esac
 os="$(uname -s | tr '[:upper:]' '[:lower:]')"
-versions="$(cat "${nginx_versions_file}")"
 dockerfiles="$(find "${script_dir}" -type f -name 'Dockerfile.*')"
 
 function lib_name() {
@@ -49,11 +44,9 @@ if [ ! -d "${download_dir}" ]; then
   mkdir --parents "${download_dir}"
 fi
 
-for version in ${versions}; do
-  if [ ! -f "${script_dir}/downloads/nginx-${version}.tar.gz" ]; then
-    curl --retry 6 --fail --show-error --silent --location --output "${script_dir}/downloads/nginx-${version}.tar.gz" "http://nginx.org/download/nginx-${version}.tar.gz"
-  fi
-done
+if [ ! -f "${script_dir}/downloads/nginx-${version}.tar.gz" ]; then
+  curl --retry 6 --fail --show-error --silent --location --output "${script_dir}/downloads/nginx-${version}.tar.gz" "http://nginx.org/download/nginx-${version}.tar.gz"
+fi
 sha256sum --check --quiet < "${script_dir}/nginx_source_checksums.txt"
 
 container_images="${script_dir}/container_images.txt"

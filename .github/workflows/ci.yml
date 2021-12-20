@@ -21,6 +21,11 @@ jobs:
         uses: docker://aevea/commitsar
   ci-pipeline:
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        nginx-version: [ 1.18.0, 1.19.10, 1.20.1, 1.21.4 ]
+
     permissions:
       contents: read
       packages: write
@@ -34,7 +39,7 @@ jobs:
           path: downloads
       - name: Build Container Images
         shell: bash
-        run: ./build.sh
+        run: ./build.sh ${{ matrix.nginx-version }}
       - name: Push to Container Registry
         shell: bash
         env:
