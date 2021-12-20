@@ -4,43 +4,100 @@ FROM $ARCH/debian:bullseye-slim
 ARG NGX_VERSION
 ENV DEBIAN_FRONTEND=noninteractive
 ENV NGINX_VERSION=$NGX_VERSION
+ENV GRPC_VERSION_TAG=v1.36.4
+ENV OTEL_CPP_VERSION_TAG=v1.1.0
 ENV OTEL_CPP_CONTRIB_VERSION_TAG=main
 
 RUN set -eux; \
     apt-get update -qqq; \
-    apt-get install --no-install-recommends -qqq --yes \
+    apt-get install --no-install-recommends --no-install-suggests -qqq --yes \
       build-essential \
+      autoconf \
+      libtool \
+      pkg-config \
       ca-certificates \
-      cmake \
-      curl \
+      gcc \
+      g++ \
       git \
-      python3-pip
+      libcurl4-openssl-dev \
+      libpcre3-dev \
+      gnupg2 \
+      lsb-release \
+      curl \
+      apt-transport-https \
+      software-properties-common \
+      zlib1g-dev; \
+    mkdir /build
 
 RUN set -eux; \
-    pip install conan; \
-    conan profile new default --detect; \
-    conan profile update settings.compiler.libcxx=libstdc++11 default
+    curl -o /etc/apt/trusted.gpg.d/kitware.asc https://apt.kitware.com/keys/kitware-archive-latest.asc; \
+    apt-add-repository "deb https://apt.kitware.com/ubuntu/ focal main"; \
+    apt-get update -qqq; \
+    apt-get install --no-install-recommends --no-install-suggests -qqq --yes cmake
 
 RUN set -eux; \
-    mkdir /build; \
-    git clone --depth 1 --branch ${OTEL_CPP_CONTRIB_VERSION_TAG} https://github.com/open-telemetry/opentelemetry-cpp-contrib.git /build/opentelemetry-cpp-contrib; \
-    mkdir /build/opentelemetry-cpp-contrib/instrumentation/nginx/build
+    git clone --depth 1 --shallow-submodules --branch ${GRPC_VERSION_TAG} --recurse-submodules https://github.com/grpc/grpc.git /build/grpc; \
+    cd /build/grpc; \
+    mkdir build; \
+    cd build; \
+    cmake \
+        -DgRPC_INSTALL=ON \
+        -DgRPC_BUILD_TESTS=OFF \
+        -DCMAKE_INSTALL_PREFIX=/install \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DgRPC_BUILD_GRPC_NODE_PLUGIN=OFF \
+        -DgRPC_BUILD_GRPC_OBJECTIVE_C_PLUGIN=OFF \
+        -DgRPC_BUILD_GRPC_PHP_PLUGIN=OFF \
+        -DgRPC_BUILD_GRPC_PHP_PLUGIN=OFF \
+        -DgRPC_BUILD_GRPC_PYTHON_PLUGIN=OFF \
+        -DgRPC_BUILD_GRPC_RUBY_PLUGIN=OFF \
+    ..; \
+    make -j2; \
+    make install
+
+
+RUN set -eux; \
+    git clone --depth 1 --shallow-submodules --branch ${OTEL_CPP_VERSION_TAG} --recurse-submodules https://github.com/open-telemetry/opentelemetry-cpp /build/opentelemetry-cpp; \
+    mkdir /build/opentelemetry-cpp/build
+
+WORKDIR /build/opentelemetry-cpp/build
+
+RUN set -eux; \
+    cmake cmake \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX=/install \
+      -DCMAKE_PREFIX_PATH=/install \
+      -DWITH_OTLP=ON \
+      -DWITH_OTLP_GRPC=ON \
+      -DWITH_OTLP_HTTP=OFF \
+      -DBUILD_TESTING=OFF \
+      -DWITH_EXAMPLES=OFF \
+      -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+      ..; \
+    make -j2; \
+    make install
+
+RUN git clone --depth 1 --branch ${OTEL_CPP_CONTRIB_VERSION_TAG} https://github.com/open-telemetry/opentelemetry-cpp-contrib.git /build/opentelemetry-cpp-contrib; \
+    cd /build/opentelemetry-cpp-contrib; \
+    mkdir instrumentation/nginx/build
 
 WORKDIR /build/opentelemetry-cpp-contrib/instrumentation/nginx
-COPY ngx_otel_module/use_conan.patch .
-COPY ngx_otel_module/conanfile.txt .
-RUN patch < use_conan.patch
-
-WORKDIR /build/opentelemetry-cpp-contrib/instrumentation/nginx/build
-RUN conan install ..
 
 COPY downloads/nginx-$NGINX_VERSION.tar.gz /tmp/nginx.tar.gz
+COPY ngx_otel_module/nginx_version.patch .
+RUN patch < nginx_version.patch
 
+WORKDIR /build/opentelemetry-cpp-contrib/instrumentation/nginx/build
 RUN set -eux; \
-    cmake ..; \
-    cmake --build . --config Release; \
+    cmake \
+      -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_PREFIX_PATH=/install \
+      -DCMAKE_INSTALL_PREFIX=/nginx-modules \
+      ..; \
     mkdir /nginx-modules; \
-    cmake --install . --prefix /nginx-modules
+    make -j2; \
+    make install
 
 FROM scratch
 COPY --from=0 /nginx-modules/otel_ngx_module.so /usr/lib/nginx/modules/otel_ngx_module.so

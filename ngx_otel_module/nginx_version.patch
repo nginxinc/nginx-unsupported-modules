@@ -1,0 +1,30 @@
+--- a/instrumentation/nginx/CMakeLists.txt
++++ b/instrumentation/nginx/CMakeLists.txt
+@@ -1,6 +1,7 @@
++set(NGINX_VERSION $ENV{NGINX_VERSION})
+ cmake_minimum_required(VERSION 3.12)
+
+ project(opentelemetry-nginx)
+
+ find_package(opentelemetry-cpp REQUIRED)
+ find_package(Threads REQUIRED)
+--- a/instrumentation/nginx/nginx.cmake
++++ b/instrumentation/nginx/nginx.cmake
+@@ -8,7 +8,7 @@ if (NOT NGINX_VERSION)
+
+   string(REGEX MATCH "[0-9]+\\.\[0-9]+\\.[0-9]+" NGINX_VER ${NGINX_VERSION_STRING})
+ else()
+-  set(NGINX_VER "1.18.0")
++  set(NGINX_VER ${NGINX_VERSION})
+ endif()
+
+ set(NGINX_VERSION ${NGINX_VER} CACHE STRING "Nginx version to compile against")
+@@ -24,7 +24,7 @@ else()
+ endif()
+
+ ExternalProject_Add(project_nginx
+-  URL "http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz"
++  URL "file:///tmp/nginx.tar.gz"
+   PREFIX "nginx"
+   BUILD_IN_SOURCE 1
+   CONFIGURE_COMMAND ./configure ${NGINX_CONFIGURE_ARGS}
