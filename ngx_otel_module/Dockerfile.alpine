@@ -1,5 +1,5 @@
 ARG ARCH=amd64
-FROM ${ARCH}/ngx_otel_module-base:linux-musl
+FROM ghcr.io/nginxinc/$ARCH/ngx_otel_module-base:linux-musl
 
 ARG NGX_VERSION
 ENV NGINX_VERSION=$NGX_VERSION
