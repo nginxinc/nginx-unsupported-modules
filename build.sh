@@ -72,7 +72,7 @@ export DOCKER_BUILDKIT=1
 # Base images need to be processed differently because they are squashed and
 # they do not require downloading NGINX source code.
 if echo "$dockerfile" | grep --quiet "base"; then
-  docker build --squash --file "${dockerfile}" --build-arg ARCH="${arch}" --tag "${arch}/${tag_name}-base:${os}-${lib_name}" "${script_dir}"
+  docker build --file "${dockerfile}" --build-arg ARCH="${arch}" --tag "${arch}/${tag_name}-base:${os}-${lib_name}" "${script_dir}"
   echo "${arch}/${tag_name}-base:${os}-${lib_name}" >> "${container_images}"
 else
   if [ ! -f "${script_dir}/downloads/nginx-${version}.tar.gz" ]; then
