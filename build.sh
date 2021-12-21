@@ -66,6 +66,9 @@ dirname="$(dirname "${dockerfile}")"
 tag_name="$(basename "${dirname}")"
 lib_name="$(lib_name "$dockerfile")"
 
+# Enable docker build kit
+export DOCKER_BUILDKIT=1
+
 # Base images need to be processed differently because they are squashed and
 # they do not require downloading NGINX source code.
 if echo "$dockerfile" | grep --quiet "base"; then
