@@ -4,7 +4,7 @@ FROM $ARCH/alpine:3.14
 ENV GRPC_VERSION_TAG=v1.36.4
 ENV OTEL_CPP_VERSION_TAG=v1.1.0
 
-RUN apk add git curl make build-base cmake patch linux-headers libcurl zlib-dev
+RUN apk add git curl make build-base cmake patch linux-headers curl-dev zlib-dev pcre-dev
 
 RUN set -eux; \
     git clone --depth 1 --shallow-submodules --branch ${GRPC_VERSION_TAG} --recurse-submodules https://github.com/grpc/grpc.git /build/grpc; \

@@ -73,6 +73,7 @@ export DOCKER_BUILDKIT=1
 # they do not require downloading NGINX source code.
 if echo "$dockerfile" | grep --quiet "base"; then
   docker build --file "${dockerfile}" --build-arg ARCH="${arch}" --tag "${arch}/${tag_name}-base:${os}-${lib_name}" "${script_dir}"
+  docker tag "${arch}/${tag_name}-base:${os}-${lib_name}" "ghcr.io/nginxinc/${arch}/${tag_name}-base:${os}-${lib_name}"
   echo "${arch}/${tag_name}-base:${os}-${lib_name}" >> "${container_images}"
 else
   if [ ! -f "${script_dir}/downloads/nginx-${version}.tar.gz" ]; then
