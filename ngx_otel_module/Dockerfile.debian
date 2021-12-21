@@ -1,5 +1,5 @@
 ARG ARCH=amd64
-FROM $ARCH/ngx_otel_module-base:linux-libc
+FROM ghcr.io/nginxinc/$ARCH/ngx_otel_module-base:linux-libc
 
 ARG NGX_VERSION
 ENV DEBIAN_FRONTEND=noninteractive
