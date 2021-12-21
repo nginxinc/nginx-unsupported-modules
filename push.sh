@@ -17,9 +17,9 @@ if [ "${image_prefix}" == "" ]; then
   exit 1
 fi
 
-container_images="${script_dir}/container_images.txt"
+container_images="$(find ${script_dir} -type f -name 'container_images-*.txt')"
 
-image_names="$(cat "${container_images}")"
+image_names="$(cat ${container_images})"
 
 for image in ${image_names}; do
   docker tag "${image}" "${image_prefix}${image}"

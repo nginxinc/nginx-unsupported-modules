@@ -19,12 +19,38 @@ jobs:
         uses: actions/checkout@v1
       - name: Commitsar check
         uses: docker://aevea/commitsar
-  ci-pipeline:
+
+  build-debian-otel-base-image:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build OTEL NGINX Base Debian Image
+        shell: bash
+        env:
+          DOCKER_BUILDKIT: '1'
+        run: ./build.sh 'base' 'ngx_otel_module/Dockerfile.base.debian'
+      - name: Push to Container Registry
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin && \
+            ./push.sh "ghcr.io/nginxinc/"
+
+  build-brotli-image:
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
         nginx-version: [ 1.18.0, 1.19.10, 1.20.1, 1.21.4 ]
+        dockerfiles:
+          - ngx_http_brotli_filter_module/Dockerfile.alpine
+          - ngx_http_brotli_filter_module/Dockerfile.debian
 
     permissions:
       contents: read
@@ -39,7 +65,44 @@ jobs:
           path: downloads
       - name: Build Container Images
         shell: bash
-        run: ./build.sh ${{ matrix.nginx-version }}
+        env:
+          DOCKER_BUILDKIT: '1'
+        run: ./build.sh ${{ matrix.nginx-version }} ${{ matrix.dockerfiles }}
+      - name: Push to Container Registry
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin && \
+            ./push.sh "ghcr.io/nginxinc/"
+
+  build-otel-image:
+    needs: build-debian-otel-base-image
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        nginx-version: [ 1.18.0, 1.19.10, 1.20.1, 1.21.4 ]
+        dockerfiles:
+          - ngx_otel_module/Dockerfile.alpine
+          - ngx_otel_module/Dockerfile.debian
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cache downloads
+        uses: actions/cache@v2
+        with:
+          key: downloads-${{ hashFiles('nginx_build_versions.txt') }}
+          path: downloads
+      - name: Build Container Images
+        shell: bash
+        env:
+          DOCKER_BUILDKIT: '1'
+        run: ./build.sh ${{ matrix.nginx-version }} ${{ matrix.dockerfiles }}
       - name: Push to Container Registry
         shell: bash
         env:

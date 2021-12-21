@@ -1,0 +1,78 @@
+ARG ARCH=amd64
+FROM $ARCH/debian:bullseye-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV GRPC_VERSION_TAG=v1.36.4
+ENV OTEL_CPP_VERSION_TAG=v1.1.0
+
+RUN set -eux; \
+    apt-get update -qqq; \
+    apt-get install --no-install-recommends --no-install-suggests -qqq --yes \
+      build-essential \
+      autoconf \
+      libtool \
+      pkg-config \
+      ca-certificates \
+      gcc \
+      g++ \
+      git \
+      libcurl4-openssl-dev \
+      libpcre3-dev \
+      gnupg2 \
+      lsb-release \
+      curl \
+      apt-transport-https \
+      software-properties-common \
+      zlib1g-dev; \
+    mkdir /build
+
+RUN set -eux; \
+    curl -o /etc/apt/trusted.gpg.d/kitware.asc https://apt.kitware.com/keys/kitware-archive-latest.asc; \
+    apt-add-repository "deb https://apt.kitware.com/ubuntu/ focal main"; \
+    apt-get update -qqq; \
+    apt-get install --no-install-recommends --no-install-suggests -qqq --yes cmake
+
+RUN set -eux; \
+    git clone --depth 1 --shallow-submodules --branch ${GRPC_VERSION_TAG} --recurse-submodules https://github.com/grpc/grpc.git /build/grpc; \
+    cd /build/grpc; \
+    mkdir build; \
+    cd build; \
+    cmake \
+        -DgRPC_INSTALL=ON \
+        -DgRPC_BUILD_TESTS=OFF \
+        -DCMAKE_INSTALL_PREFIX=/install \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DgRPC_BUILD_GRPC_NODE_PLUGIN=OFF \
+        -DgRPC_BUILD_GRPC_OBJECTIVE_C_PLUGIN=OFF \
+        -DgRPC_BUILD_GRPC_PHP_PLUGIN=OFF \
+        -DgRPC_BUILD_GRPC_PHP_PLUGIN=OFF \
+        -DgRPC_BUILD_GRPC_PYTHON_PLUGIN=OFF \
+        -DgRPC_BUILD_GRPC_RUBY_PLUGIN=OFF \
+    ..; \
+    make -j2; \
+    make install
+
+RUN set -eux; \
+    git clone --depth 1 --shallow-submodules --branch ${OTEL_CPP_VERSION_TAG} --recurse-submodules https://github.com/open-telemetry/opentelemetry-cpp /build/opentelemetry-cpp; \
+    mkdir /build/opentelemetry-cpp/build
+
+WORKDIR /build/opentelemetry-cpp/build
+
+RUN set -eux; \
+    cmake cmake \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX=/install \
+      -DCMAKE_PREFIX_PATH=/install \
+      -DWITH_OTLP=ON \
+      -DWITH_OTLP_GRPC=ON \
+      -DWITH_OTLP_HTTP=OFF \
+      -DBUILD_TESTING=OFF \
+      -DWITH_EXAMPLES=OFF \
+      -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+      ..; \
+    make -j2; \
+    make install
+
+RUN set -eux; \
+    apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
+    rm -rf /var/lib/apt/lists/* /var/tmp/* /tmp/*
