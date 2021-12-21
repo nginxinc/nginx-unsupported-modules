@@ -26,8 +26,8 @@ jobs:
     strategy:
       matrix:
         dockerfiles:
-          - ngx_http_brotli_filter_module/Dockerfile.base.alpine
-          - ngx_http_brotli_filter_module/Dockerfile.base.debian
+          - ngx_otel_module/Dockerfile.base.alpine
+          - ngx_otel_module/Dockerfile.base.debian
 
     permissions:
       contents: read
