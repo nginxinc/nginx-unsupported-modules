@@ -38,7 +38,7 @@ esac
 os="$(uname -s | tr '[:upper:]' '[:lower:]')"
 
 function lib_name() {
-   distro_name="$(echo "$1" | cut -d'.' -f2)"
+   distro_name="${1##*.}"
    if [ "${distro_name}" == "alpine" ]; then
      echo 'musl'
    else

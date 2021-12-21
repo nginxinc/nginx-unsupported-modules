@@ -20,8 +20,14 @@ jobs:
       - name: Commitsar check
         uses: docker://aevea/commitsar
 
-  build-debian-otel-base-image:
+  build-otel-base-image:
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        dockerfiles:
+          - ngx_http_brotli_filter_module/Dockerfile.base.alpine
+          - ngx_http_brotli_filter_module/Dockerfile.base.debian
 
     permissions:
       contents: read
@@ -29,11 +35,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Build OTEL NGINX Base Debian Image
+      - name: Build OTEL NGINX Base Image
         shell: bash
         env:
           DOCKER_BUILDKIT: '1'
-        run: ./build.sh 'base' 'ngx_otel_module/Dockerfile.base.debian'
+        run: ./build.sh 'base' ${{ matrix.dockerfiles }}
       - name: Push to Container Registry
         shell: bash
         env:
@@ -77,7 +83,7 @@ jobs:
             ./push.sh "ghcr.io/nginxinc/"
 
   build-otel-image:
-    needs: build-debian-otel-base-image
+    needs: build-otel-base-image
     runs-on: ubuntu-latest
 
     strategy:

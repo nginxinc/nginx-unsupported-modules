@@ -1,36 +1,10 @@
 ARG ARCH=amd64
-FROM $ARCH/debian:bullseye-slim
+FROM $ARCH/alpine:3.14
 
-ENV DEBIAN_FRONTEND=noninteractive
 ENV GRPC_VERSION_TAG=v1.36.4
 ENV OTEL_CPP_VERSION_TAG=v1.1.0
 
-RUN set -eux; \
-    apt-get update -qqq; \
-    apt-get install --no-install-recommends --no-install-suggests -qqq --yes \
-      build-essential \
-      autoconf \
-      libtool \
-      pkg-config \
-      ca-certificates \
-      gcc \
-      g++ \
-      git \
-      libcurl4-openssl-dev \
-      libpcre3-dev \
-      gnupg2 \
-      lsb-release \
-      curl \
-      apt-transport-https \
-      software-properties-common \
-      zlib1g-dev; \
-    mkdir /build; \
-    curl -o /etc/apt/trusted.gpg.d/kitware.asc https://apt.kitware.com/keys/kitware-archive-latest.asc; \
-    apt-add-repository "deb https://apt.kitware.com/ubuntu/ focal main"; \
-    apt-get update -qqq; \
-    apt-get install --no-install-recommends --no-install-suggests -qqq --yes cmake; \
-    apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
-    rm -rf /var/lib/apt/lists/* /var/tmp/* /tmp/*
+RUN apk add git curl make build-base cmake patch linux-headers libcurl zlib-dev
 
 RUN set -eux; \
     git clone --depth 1 --shallow-submodules --branch ${GRPC_VERSION_TAG} --recurse-submodules https://github.com/grpc/grpc.git /build/grpc; \
@@ -71,5 +45,3 @@ RUN set -eux; \
     make -j$(nproc); \
     make install; \
     rm -rf /build/opentelemetry-cpp
-
-WORKDIR /

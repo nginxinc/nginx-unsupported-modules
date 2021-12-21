@@ -48,7 +48,7 @@ RUN set -eux; \
                 --with-compat \
                 --with-cc-opt="-g -O2 -fdebug-prefix-map=/data/builder/debuild/nginx-${NGINX_VERSION}/debian/debuild-base/nginx-${NGINX_VERSION}=. -fstack-protector-strong -Wformat -Werror=format-security -Wp,-D_FORTIFY_SOURCE=2 -fPIC" \
                 --with-ld-opt='-Wl,-z,relro -Wl,-z,now -Wl,--as-needed -pie'; \
-    make -j2 modules
+    make -j$(nproc) modules
 
 FROM scratch
 COPY --from=0 /tmp/nginx/objs/ngx_http_brotli_filter_module.so /usr/lib/nginx/modules/ngx_http_brotli_filter_module.so

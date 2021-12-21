@@ -19,13 +19,12 @@ RUN patch < nginx_version.patch
 WORKDIR /build/opentelemetry-cpp-contrib/instrumentation/nginx/build
 RUN set -eux; \
     cmake \
-      -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
       -DCMAKE_BUILD_TYPE=Release \
       -DCMAKE_PREFIX_PATH=/install \
       -DCMAKE_INSTALL_PREFIX=/nginx-modules \
       ..; \
     mkdir /nginx-modules; \
-    make -j2; \
+    make -j$(nproc); \
     make install
 
 FROM scratch
