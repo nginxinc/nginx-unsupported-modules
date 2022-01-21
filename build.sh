@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 set -o errexit  # abort on nonzero exit status
-set -o nounset  # abort on unbound variable
 set -o pipefail # don't hide errors within pipes
 
 version="$1"
@@ -15,6 +14,8 @@ if [ "${dockerfile}" == "" ]; then
   echo >&2 "The second parameter to the build script must be the relative dockerfile path"
   exit 1
 fi
+
+set -o nounset  # abort on unbound variable
 
 if ! command -v docker > /dev/null; then
   echo >&2 "Docker must be installed to run build"
