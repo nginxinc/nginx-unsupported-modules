@@ -2,7 +2,7 @@ ARG ARCH=amd64
 FROM $ARCH/alpine:3.14
 
 ENV GRPC_VERSION_TAG=v1.36.4
-ENV OTEL_CPP_VERSION_TAG=v1.1.1
+ENV OTEL_CPP_VERSION_TAG=v1.2.0
 
 RUN apk add git curl make build-base cmake patch linux-headers curl-dev zlib-dev pcre-dev
 
