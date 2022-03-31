@@ -25,8 +25,10 @@ and modules.
 | 1.19.10       | linux | musl           | open telemetry (latest commit) |
 | 1.20.1        | linux | libc           | open telemetry (latest commit) |
 | 1.20.1        | linux | musl           | open telemetry (latest commit) |
-| 1.21.4        | linux | libc           | open telemetry (latest commit) |
-| 1.21.4        | linux | musl           | open telemetry (latest commit) |
+| 1.21.5        | linux | libc           | open telemetry (latest commit) |
+| 1.21.5        | linux | musl           | open telemetry (latest commit) |
+| 1.21.6        | linux | libc           | open telemetry (latest commit) |
+| 1.21.6        | linux | musl           | open telemetry (latest commit) |
 
 # Usage
 
