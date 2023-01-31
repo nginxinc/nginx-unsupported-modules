@@ -3,7 +3,7 @@ FROM $ARCH/debian:bullseye-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV GRPC_VERSION_TAG=v1.36.4
-ENV OTEL_CPP_VERSION_TAG=v1.2.0
+ENV OTEL_CPP_VERSION_TAG=v1.8.1
 
 RUN set -eux; \
     apt-get update -qqq; \
