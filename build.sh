@@ -77,12 +77,19 @@ if echo "$dockerfile" | grep --quiet "base"; then
   docker tag "${arch}/${tag_name}-base:${os}-${lib_name}" "ghcr.io/nginxinc/${arch}/${tag_name}-base:${os}-${lib_name}"
   echo "${arch}/${tag_name}-base:${os}-${lib_name}" >> "${container_images}"
 else
+  if [ ! -f "${script_dir}/downloads/nginx-${version}.tar.gz.asc" ]; then
+    echo "Downloading http://nginx.org/download/nginx-${version}.tar.gz.asc -> ${script_dir}/downloads/nginx-${version}.tar.gz.asc"
+    curl --retry 6 --fail --show-error --silent --location --output "${script_dir}/downloads/nginx-${version}.tar.gz.asc" "http://nginx.org/download/nginx-${version}.tar.gz.asc"
+  fi
   if [ ! -f "${script_dir}/downloads/nginx-${version}.tar.gz" ]; then
     echo "Downloading http://nginx.org/download/nginx-${version}.tar.gz -> ${script_dir}/downloads/nginx-${version}.tar.gz"
     curl --retry 6 --fail --show-error --silent --location --output "${script_dir}/downloads/nginx-${version}.tar.gz" "http://nginx.org/download/nginx-${version}.tar.gz"
+    if ! gpg --homedir "${script_dir}/.gnupg" --verify "${script_dir}/downloads/nginx-${version}.tar.gz.asc" "${script_dir}/downloads/nginx-${version}.tar.gz"; then
+      echo >&2 "Could not verify integrity of NGINX archive: ${script_dir}/downloads/nginx-${version}.tar.gz"
+      exit 2
+    fi
   fi
 
-  grep "nginx-${version}.tar.gz" "${script_dir}/nginx_source_checksums.txt" | sha256sum --check --quiet
   docker build --file "${dockerfile}" --build-arg ARCH="${arch}" --build-arg NGX_VERSION="${version}" --tag "${arch}/${tag_name}:${os}-${lib_name}-nginx-${version}" "${script_dir}"
   echo "${arch}/${tag_name}:${os}-${lib_name}-nginx-${version}" >> "${container_images}"
 fi

@@ -112,5 +112,6 @@ fabric.properties
 
 # Archive files
 *.tar.gz
+*.tar.gz.asc
 container_images.txt
 container_images-*.txt
