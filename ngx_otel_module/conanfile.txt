@@ -1,8 +1,0 @@
-[requires]
-grpc/1.37.1
-opentelemetry-cpp/1.0.1
-
-[generators]
-cmake
-cmake_find_package
-cmake_paths
