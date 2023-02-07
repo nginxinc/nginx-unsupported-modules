@@ -22,7 +22,17 @@ if ! command -v docker > /dev/null; then
   exit 1
 fi
 
+if ! command -v curl > /dev/null; then
+  echo >&2 "curl must be installed to run build"
+  exit 1
+fi
+
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+
+if [ ! -d "${script_dir}/.gnupg" ]; then
+  echo >&2 "local gnupg directory not found at path: ${script_dir}/.gnupg"
+  exit 1
+fi
 
 arch=""
 case $(uname -m) in
