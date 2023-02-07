@@ -69,6 +69,8 @@ lib_name="$(lib_name "$dockerfile")"
 
 # Enable docker build kit
 export DOCKER_BUILDKIT=1
+# Ensure permissions are set correctly for gpg data directory
+chmod 700 "${script_dir}/.gnupg"
 
 # Base images need to be processed differently because they are squashed and
 # they do not require downloading NGINX source code.
